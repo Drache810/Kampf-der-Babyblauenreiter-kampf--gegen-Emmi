@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Babyblaue Reiter – Das Spiel</title>
+  <style>
+    body {
+      background: #111;
+      color: #eee;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    #log {
+      border: 2px solid #4af;
+      border-radius: 12px;
+      padding: 15px;
+      margin: 20px auto;
+      width: 70%;
+      height: 300px;
+      overflow-y: auto;
+      text-align: left;
+      background: #222;
+    }
+    button {
+      margin: 5px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #4af;
+      color: #111;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #6cf;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>⚔️ Babyblaue Reiter – Mission Discord</h1>
+  <div id="log"></div>
+  <div id="actions"></div>
+
+  <script>
+    let playerHP = 30;
+    let enemyHP = 0;
+    let enemyName = "";
+    let currentZone = 0;
+
+    const zones = [
+      "das Bot-Labor",
+      "die allgemeinen Chats",
+      "der Voice-Channel",
+      "die privaten Nachrichten",
+      "Emmis Festung"
+    ];
+
+    function log(msg) {
+      const logBox = document.getElementById("log");
+      logBox.innerHTML += msg + "<br>";
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function setActions(actions) {
+      const box = document.getElementById("actions");
+      box.innerHTML = "";
+      actions.forEach(a => {
+        const btn = document.createElement("button");
+        btn.textContent = a.text;
+        btn.onclick = a.fn;
+        box.appendChild(btn);
+      });
+    }
+
+    function intro() {
+      log("Willkommen, Reiter der Babyblauen Armee!");
+      log("Deine Mission: Den Discord-Server übernehmen und Emmi stürzen!");
+      nextZone();
+    }
+
+    function nextZone() {
+      if (currentZone >= zones.length) return;
+
+      let zone = zones[currentZone];
+      log("<br>➡️ Du betrittst " + zone + "!");
+      
+      if (zone === "Emmis Festung") {
+        startBattle("Emmi", 30);
+      } else {
+        if (Math.random() < 0.5) {
+          log("🍷 Du findest einen Heiltrank und fühlst dich gestärkt!");
+          playerHP = 30;
+          currentZone++;
+          setActions([{text:"Weiter", fn:nextZone}]);
+        } else {
+          log("🚨 Ein Gegner erscheint!");
+          startBattle("Wächter", 20);
+        }
+      }
+    }
+
+    function startBattle(name, hp) {
+      enemyName = name;
+      enemyHP = hp;
+      log("<br>⚔️ Kampf gegen " + enemyName + " beginnt!");
+      battleTurn();
+    }
+
+    function battleTurn() {
+      if (playerHP <= 0) {
+        defeat();
+        return;
+      }
+      if (enemyHP <= 0) {
+        log("✅ " + enemyName + " wurde besiegt!");
+        currentZone++;
+        if (enemyName === "Emmi") {
+          victory();
+        } else {
+          setActions([{text:"Weiter", fn:nextZone}]);
+        }
+        return;
+      }
+
+      log("<br>Deine HP: " + playerHP + " | " + enemyName + " HP: " + enemyHP);
+      setActions([
+        {text:"Blaues Schwert", fn:()=>attack("Schwert",4,8)},
+        {text:"Babyblaue Magie", fn:()=>attack("Magie",3,10)},
+        {text:"Verteidigen", fn:defend}
+      ]);
+    }
+
+    function attack(type, min, max) {
+      let dmg = Math.floor(Math.random()*(max-min+1))+min;
+      log("💥 Du benutzt " + type + " und verursachst " + dmg + " Schaden!");
+      enemyHP -= dmg;
+      enemyTurn();
+    }
+
+    function defend() {
+      let heal = Math.floor(Math.random()*4)+3;
+      playerHP += heal;
+      log("🛡️ Du verteidigst dich und regenerierst " + heal + " HP!");
+      enemyTurn();
+    }
+
+    function enemyTurn() {
+      if (enemyHP > 0) {
+        let dmg = Math.floor(Math.random()*5)+3;
+        log("⚔️ " + enemyName + " greift an und verursacht " + dmg + " Schaden!");
+        playerHP -= dmg;
+      }
+      battleTurn();
+    }
+
+    function victory() {
+      log("<br>🏆 Du hast Emmi besiegt und den Discord-Server übernommen!");
+      setActions([{text:"Nochmal spielen", fn:restart}]);
+    }
+
+    function defeat() {
+      log("<br>💀 Du wurdest von " + enemyName + " besiegt...");
+      setActions([{text:"Nochmal versuchen", fn:restart}]);
+    }
+
+    function restart() {
+      playerHP = 30;
+      currentZone = 0;
+      document.getElementById("log").innerHTML = "";
+      intro();
+    }
+
+    // Start
+    intro();
+  </script>
+
+</body>
+</html>
